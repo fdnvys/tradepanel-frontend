@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-const API_URL = "http://localhost:5000/api/auth"; // Backend adresinize göre güncelleyin
+import { userApi } from "../services/api";
 
 const Login: React.FC = () => {
   const [isRegister, setIsRegister] = useState(false);
@@ -18,27 +17,17 @@ const Login: React.FC = () => {
     setSuccess(null);
     setLoading(true);
     try {
-      const endpoint = isRegister ? "/register" : "/login";
-      const res = await fetch(API_URL + endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Bir hata oluştu");
+      if (isRegister) {
+        await userApi.register(username, password);
+        setSuccess("Kayıt başarılı! Admin onayı bekleniyor.");
       } else {
-        if (isRegister) {
-          setSuccess("Kayıt başarılı! Admin onayı bekleniyor.");
-        } else {
-          // Giriş başarılı, token'ı kaydet
-          localStorage.setItem("token", data.token);
-          setSuccess("Giriş başarılı!");
-          window.location.href = "/";
-        }
+        const data = await userApi.login(username, password);
+        localStorage.setItem("token", data.token);
+        setSuccess("Giriş başarılı!");
+        window.location.href = "/";
       }
-    } catch (err) {
-      setError("Sunucuya bağlanılamadı.");
+    } catch (err: any) {
+      setError(err?.message || "Sunucuya bağlanılamadı.");
     } finally {
       setLoading(false);
     }
