@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { formatCurrency, formatDate } from "../utils/formatters";
 
 interface Trade {
   id: number;
@@ -54,7 +53,7 @@ const TradeCard: React.FC<TradeCardProps> = ({
   const [showEditModal, setShowEditModal] = useState(false);
   const [exitBalance, setExitBalance] = useState<number | "">("");
   const [exitVolume, setExitVolume] = useState<number | "">("");
-  const [editVolume, setEditVolume] = useState<number | "">(trade.volume);
+  const [editVolume] = useState<number | "">(trade.volume);
   const [editEntryBalance, setEditEntryBalance] = useState<number | "">(
     trade.entry_balance
   );
@@ -128,26 +127,6 @@ const TradeCard: React.FC<TradeCardProps> = ({
     } finally {
       setLoading(false);
     }
-  };
-
-  const getStatusColor = () => {
-    return trade.is_completed
-      ? "bg-green-100 text-green-800"
-      : "bg-blue-100 text-blue-800";
-  };
-
-  const getStatusText = () => {
-    return trade.is_completed ? "Tamamlandı" : "Aktif";
-  };
-
-  const calculateBalanceChange = () => {
-    if (!trade.is_completed || !trade.exit_balance) return null;
-    return trade.exit_balance - trade.entry_balance;
-  };
-
-  const calculateVolumeChange = () => {
-    if (!trade.is_completed || !trade.exit_volume) return null;
-    return trade.exit_volume - trade.volume;
   };
 
   return (

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   accountsApi,
-  createPair,
   getAvailablePairs,
   addPairsToAccount,
   getUserPairs,
@@ -48,7 +47,7 @@ const Dashboard: React.FC = () => {
   const [vipModalValue, setVipModalValue] = useState<number>(0);
   const [successMessage, setSuccessMessage] = useState("");
   const [showPairModal, setShowPairModal] = useState(false);
-  const [newPairName, setNewPairName] = useState("");
+
   const [showActivePairs, setShowActivePairs] = useState(true);
   const [showCompletedPairs, setShowCompletedPairs] = useState(true);
   const [selectedPairs, setSelectedPairs] = useState<number[]>([]);
@@ -64,9 +63,9 @@ const Dashboard: React.FC = () => {
   const [tradeLoading, setTradeLoading] = useState(false);
   const [tradeList, setTradeList] = useState<any[]>([]);
   const [entryBalance, setEntryBalance] = useState<number | "">("");
-  const [entryVolume, setEntryVolume] = useState<number | "">("");
+
   const [showStartTradeModal, setShowStartTradeModal] = useState(false);
-  const [showTradeList, setShowTradeList] = useState(false);
+
   const [totalReturn, setTotalReturn] = useState<number>(0);
   const [totalReturnLoading, setTotalReturnLoading] = useState<boolean>(false);
   const [pairReward, setPairReward] = useState<number>(0);
@@ -84,6 +83,7 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     fetchAccounts();
+    // eslint-disable-next-line
   }, []);
 
   const fetchAccounts = async (afterUpdateId?: number) => {
@@ -1621,20 +1621,26 @@ const Dashboard: React.FC = () => {
                   if (!selectedAccount || !completeModalPair) return;
                   try {
                     // Önce selled_dolar güncelle
-                    await fetch("/api/pairs/userpair/selled", {
-                      method: "PATCH",
-                      headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${localStorage.getItem(
-                          "token"
-                        )}`,
-                      },
-                      body: JSON.stringify({
-                        pairId: completeModalPair.id,
-                        accountId: selectedAccount.id,
-                        selledDolar: Number(soldAmount),
-                      }),
-                    });
+                    await fetch(
+                      `${
+                        process.env.REACT_APP_API_URL ||
+                        "https://web-production-2a27.up.railway.app/api"
+                      }/pairs/userpair/selled`,
+                      {
+                        method: "PATCH",
+                        headers: {
+                          "Content-Type": "application/json",
+                          Authorization: `Bearer ${localStorage.getItem(
+                            "token"
+                          )}`,
+                        },
+                        body: JSON.stringify({
+                          pairId: completeModalPair.id,
+                          accountId: selectedAccount.id,
+                          selledDolar: Number(soldAmount),
+                        }),
+                      }
+                    );
                     // Sonra pariteyi pasif yap
                     await completePair(
                       completeModalPair.id,

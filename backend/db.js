@@ -7,8 +7,7 @@ db.serialize(() => {
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
-    is_approved INTEGER DEFAULT 0,
-    is_pro INTEGER DEFAULT 0
+    is_approved INTEGER DEFAULT 0
   )`);
 
   // Accounts tablosu

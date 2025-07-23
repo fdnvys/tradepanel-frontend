@@ -127,7 +127,7 @@ const AdminPanel: React.FC = () => {
 
     setPairLoading(true);
     try {
-      const result = await createPair(newPairName.trim(), rewardValue);
+      await createPair(newPairName.trim(), rewardValue);
       setMessage(`Parite başarıyla eklendi! Ödül: ${rewardValue}`);
       setNewPairName("");
       setNewPairReward("0");

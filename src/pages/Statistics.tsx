@@ -111,7 +111,6 @@ const Statistics: React.FC = () => {
 
   // Hesap bazlı özetler (gerçek veri)
   const accountSummaries: UserSummary[] = statistics.reduce((acc, row) => {
-    const accountKey = `${row.user_name}-${row.account_name}`;
     const existingAccount = acc.find(
       (account) =>
         account.user_name === row.user_name &&
