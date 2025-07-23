@@ -1091,6 +1091,7 @@ const Dashboard: React.FC = () => {
                     onClick={() => {
                       setSelectedAccount(acc);
                       setShowAccountDropdown(false);
+                      setSidebarOpen(false);
                     }}
                   >
                     <span className="truncate">{acc.name}</span>
@@ -1116,7 +1117,10 @@ const Dashboard: React.FC = () => {
           {/* Parite Ekle Butonu */}
           <button
             className="w-full mb-4 md:mb-6 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-xl shadow transition text-sm md:text-base"
-            onClick={handleOpenPairModal}
+            onClick={() => {
+              handleOpenPairModal();
+              setSidebarOpen(false);
+            }}
           >
             + Parite Ekle
           </button>
@@ -1148,7 +1152,10 @@ const Dashboard: React.FC = () => {
                           ? "border-blue-300"
                           : "border-transparent"
                       }`}
-                      onClick={() => handleSelectPair(idx)}
+                      onClick={() => {
+                        handleSelectPair(idx);
+                        setSidebarOpen(false);
+                      }}
                     >
                       <span className="truncate">{pair.name}</span>
                     </button>
@@ -1198,7 +1205,10 @@ const Dashboard: React.FC = () => {
                           ? "border-gray-300"
                           : "border-gray-500"
                       }`}
-                      onClick={() => handleSelectCompletedPair(idx)}
+                      onClick={() => {
+                        handleSelectCompletedPair(idx);
+                        setSidebarOpen(false);
+                      }}
                     >
                       <span className="truncate">{pair.name}</span>
                     </button>
