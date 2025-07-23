@@ -8,7 +8,8 @@ import {
 } from "../types";
 
 const API_BASE_URL =
-  process.env.REACT_APP_API_URL || "https://quantteknoloji.com/api";
+  process.env.REACT_APP_API_URL ||
+  "https://web-production-2a27.up.railway.app/api";
 
 // API istekleri için yardımcı fonksiyon
 const apiRequest = async (endpoint: string, options: RequestInit = {}) => {

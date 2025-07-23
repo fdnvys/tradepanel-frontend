@@ -4,7 +4,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const db = require("../db");
 
-const JWT_SECRET = "supersecretkey"; // Gerçek projede .env ile saklanmalı
+const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey"; // Environment variable'dan al
 
 // Admin kullanıcı adı ve şifresi (gerçek projede veritabanında saklanmalı)
 const ADMIN_USERNAME = "admin";
