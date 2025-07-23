@@ -36,6 +36,9 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedPairIndex, setSelectedPairIndex] = useState(0);
+  const [selectedPairType, setSelectedPairType] = useState<
+    "active" | "completed"
+  >("active");
   const [showAccountDropdown, setShowAccountDropdown] = useState(false);
   const [showNavbarDropdown, setShowNavbarDropdown] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -146,7 +149,10 @@ const Dashboard: React.FC = () => {
   };
 
   // Sağ panelde detaylı trade paneli
-  const pair = pairDetail;
+  const pair =
+    selectedPairType === "active"
+      ? activePairs[selectedPairIndex]
+      : completedPairs[selectedPairIndex];
 
   const handleOpenPairModal = async () => {
     if (!selectedAccount) {
@@ -255,6 +261,38 @@ const Dashboard: React.FC = () => {
       const data = await getTradeList(selectedAccount.id, pair.id);
       setTradeList(data.trades || []);
       setSelectedPairIndex(idx);
+      setSelectedPairType("active");
+    } catch (e: any) {
+      setPairDetailError(e.message || "Detaylar alınamadı");
+      setTotalReturnLoading(false);
+    } finally {
+      setPairDetailLoading(false);
+      setPriceLoading(false);
+    }
+  };
+
+  const handleSelectCompletedPair = async (idx: number) => {
+    setPairDetailLoading(true);
+    setTotalReturnLoading(true);
+    setPairDetailError("");
+    setPairDetail(null);
+    setPriceLoading(true);
+    try {
+      const pair = completedPairs[idx];
+      if (!pair || !selectedAccount) return;
+      const detail = await getPairDetails(selectedAccount.id, pair.id);
+      setTotalReturn(detail.totalReturn || 0);
+      setPairReward(detail.totalReward || detail.reward || 0);
+      setInstantReward(detail.reward_amount || detail.reward || 0);
+      setRewardInput("");
+      setTimeout(() => setTotalReturnLoading(false), 300);
+      // Sadece backend'deki mevcut fiyatı göster
+      setPairDetail(detail);
+      // Trade verilerini çek
+      const data = await getTradeList(selectedAccount.id, pair.id);
+      setTradeList(data.trades || []);
+      setSelectedPairIndex(idx);
+      setSelectedPairType("completed");
     } catch (e: any) {
       setPairDetailError(e.message || "Detaylar alınamadı");
       setTotalReturnLoading(false);
@@ -1105,6 +1143,7 @@ const Dashboard: React.FC = () => {
                   <div key={pair.id} className="flex items-center gap-2">
                     <button
                       className={`flex-1 w-full bg-gradient-to-r from-blue-500/80 to-blue-400/80 hover:from-blue-600 hover:to-blue-500 text-white font-semibold py-2 md:py-3 rounded-lg md:rounded-xl shadow transition flex items-center justify-center gap-2 border-2 text-sm md:text-base ${
+                        selectedPairType === "active" &&
                         selectedPairIndex === idx
                           ? "border-blue-300"
                           : "border-transparent"
@@ -1152,7 +1191,15 @@ const Dashboard: React.FC = () => {
               <div className="flex flex-col gap-2 md:gap-3">
                 {completedPairs.map((pair: any, idx: number) => (
                   <div key={pair.id} className="flex items-center gap-2">
-                    <button className="flex-1 w-full bg-gradient-to-r from-gray-600/80 to-gray-500/80 hover:from-gray-500 hover:to-gray-400 text-gray-300 hover:text-gray-200 font-semibold py-2 md:py-3 rounded-lg md:rounded-xl shadow transition flex items-center justify-center gap-2 border-2 border-gray-500 text-sm md:text-base">
+                    <button
+                      className={`flex-1 w-full bg-gradient-to-r from-gray-600/80 to-gray-500/80 hover:from-gray-500 hover:to-gray-400 text-gray-300 hover:text-gray-200 font-semibold py-2 md:py-3 rounded-lg md:rounded-xl shadow transition flex items-center justify-center gap-2 border-2 text-sm md:text-base ${
+                        selectedPairType === "completed" &&
+                        selectedPairIndex === idx
+                          ? "border-gray-300"
+                          : "border-gray-500"
+                      }`}
+                      onClick={() => handleSelectCompletedPair(idx)}
+                    >
                       <span className="truncate">{pair.name}</span>
                     </button>
                     <button
@@ -1217,7 +1264,7 @@ const Dashboard: React.FC = () => {
                         setPriceLoading(false);
                       }
                     }}
-                    disabled={priceLoading}
+                    disabled={priceLoading || selectedPairType === "completed"}
                   >
                     {priceLoading ? "Güncelleniyor..." : "Fiyat Güncelle"}
                   </button>
@@ -1261,7 +1308,7 @@ const Dashboard: React.FC = () => {
                 <div className="bg-[#23243a] rounded-xl md:rounded-2xl p-3 md:p-6 flex flex-col items-center shadow">
                   <div className="text-gray-400 text-xs">Toplam İade</div>
                   <div className="text-lg md:text-xl font-bold text-yellow-400 min-h-[28px] flex items-center justify-center">
-                    {toplamIade === 0 ? "—" : toplamIade}{" "}
+                    {toplamIade === 0 ? "—" : Math.round(toplamIade)}{" "}
                     <span className="text-xs">USDT</span>
                   </div>
                 </div>
@@ -1308,7 +1355,8 @@ const Dashboard: React.FC = () => {
                     rewardLoading ||
                     !selectedAccount ||
                     !activePairs[selectedPairIndex] ||
-                    rewardInput === ""
+                    rewardInput === "" ||
+                    selectedPairType === "completed"
                   }
                   onClick={async () => {
                     if (
@@ -1362,7 +1410,7 @@ const Dashboard: React.FC = () => {
                   <button
                     className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 md:py-3 rounded-xl font-bold text-base md:text-lg transition"
                     onClick={() => setShowStartTradeModal(true)}
-                    disabled={tradeLoading}
+                    disabled={tradeLoading || selectedPairType === "completed"}
                   >
                     {tradeLoading ? "Başlatılıyor..." : "Trade Başlat"}
                   </button>
@@ -1385,13 +1433,17 @@ const Dashboard: React.FC = () => {
                           key={trade.id}
                           trade={{
                             ...trade,
-                            pair_name: activePairs[selectedPairIndex]?.name,
+                            pair_name:
+                              selectedPairType === "active"
+                                ? activePairs[selectedPairIndex]?.name
+                                : completedPairs[selectedPairIndex]?.name,
                             account_name: selectedAccount?.name,
                           }}
                           onFinish={handleFinishTrade}
                           onEdit={handleEditTrade}
                           onDelete={handleDeleteTrade}
                           aktifTradeId={aktifTrade ? aktifTrade.id : null}
+                          isReadOnly={selectedPairType === "completed"}
                         />
                       ))}
                     </div>

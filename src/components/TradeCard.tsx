@@ -26,6 +26,7 @@ interface TradeCardProps {
   onEdit: (tradeId: number, updates: any) => void;
   onDelete: (tradeId: number) => void;
   aktifTradeId?: number | null;
+  isReadOnly?: boolean;
 }
 
 const ChevronIcon = ({ open }: { open: boolean }) => (
@@ -48,6 +49,7 @@ const TradeCard: React.FC<TradeCardProps> = ({
   onEdit,
   onDelete,
   aktifTradeId,
+  isReadOnly = false,
 }) => {
   const [showFinishModal, setShowFinishModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -278,16 +280,19 @@ const TradeCard: React.FC<TradeCardProps> = ({
                 <span className="text-white font-bold">{trade.vip ?? "-"}</span>
               </div>
               <div className="col-span-2 md:col-span-3 flex gap-2 mt-2 justify-end">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowEditModal(true);
-                  }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-xs font-medium transition"
-                >
-                  Düzenle
-                </button>
-                {!trade.is_completed &&
+                {!isReadOnly && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowEditModal(true);
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-xs font-medium transition"
+                  >
+                    Düzenle
+                  </button>
+                )}
+                {!isReadOnly &&
+                  !trade.is_completed &&
                   (!aktifTradeId || aktifTradeId !== trade.id) && (
                     <button
                       onClick={(e) => {
@@ -299,15 +304,17 @@ const TradeCard: React.FC<TradeCardProps> = ({
                       Bitir
                     </button>
                   )}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete();
-                  }}
-                  className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg text-xs font-medium transition"
-                >
-                  Sil
-                </button>
+                {!isReadOnly && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete();
+                    }}
+                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg text-xs font-medium transition"
+                  >
+                    Sil
+                  </button>
+                )}
               </div>
             </div>
             <div className="col-span-2 md:col-span-3 text-xs text-gray-400 mt-2 text-right">
