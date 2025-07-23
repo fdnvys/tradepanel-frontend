@@ -1,3 +1,4 @@
+// Vercel cache temizliği için dummy değişiklik
 import {
   Event,
   Trade,
