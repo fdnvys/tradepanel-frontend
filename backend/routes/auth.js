@@ -26,8 +26,10 @@ router.post("/register", async (req, res) => {
         "INSERT INTO users (username, password, is_approved, is_pro) VALUES (?, ?, 0, 0)",
         [username, hash],
         function (err) {
-          if (err)
+          if (err) {
+            console.error("REGISTER ERROR:", err); // Hata detayını logla
             return res.status(500).json({ error: "Kayıt sırasında hata." });
+          }
           // Yeni kullanıcıyı is_pro ile döndür
           db.get(
             "SELECT id, username, is_approved, COALESCE(is_pro, 0) as is_pro FROM users WHERE id = ?",
