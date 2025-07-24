@@ -90,4 +90,6 @@ export interface StatisticsRow {
   total_refund: number;
   avg_trade: number;
   selled_dolar: number;
+  first_trade_date: string | null;
+  last_trade_date: string | null;
 }

@@ -6,7 +6,8 @@ import {
   togglePairStatus,
   deletePair,
 } from "../services/api";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import Navbar from "../components/Navbar";
 
 interface User {
   id: number;
@@ -40,6 +41,7 @@ const AdminPanel: React.FC = () => {
   const [refundInput, setRefundInput] = useState<string>("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [pairToDelete, setPairToDelete] = useState<Pair | null>(null);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -72,10 +74,19 @@ const AdminPanel: React.FC = () => {
   const fetchPairs = async () => {
     try {
       const pairsData = await getPairs();
-      setPairs(pairsData);
+      console.log("AdminPanel fetchPairs result:", pairsData);
+
+      // Eğer pairsData array değilse boş array kullan
+      if (Array.isArray(pairsData)) {
+        setPairs(pairsData);
+      } else {
+        console.error("pairsData is not an array:", pairsData);
+        setPairs([]);
+      }
     } catch (error) {
       console.error("Pariteler yüklenirken hata:", error);
       setMessage("Pariteler yüklenirken hata oluştu.");
+      setPairs([]);
     }
   };
 
@@ -191,19 +202,26 @@ const AdminPanel: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      {/* Navbar */}
-      <nav className="w-full bg-gray-800 border-b border-gray-700 px-6 py-4 flex items-center justify-between sticky top-0 z-20">
+      <Navbar onSidebarToggle={() => {}} showHamburger={false}>
         <span className="text-2xl font-bold text-blue-400">Admin Paneli</span>
-        <button
-          onClick={handleLogout}
-          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold"
-        >
-          Çıkış Yap
-        </button>
-      </nav>
+        <div className="flex space-x-4">
+          <Link
+            to="/admin-statistics"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition"
+          >
+            İstatistikler
+          </Link>
+          <button
+            onClick={handleLogout}
+            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold"
+          >
+            Çıkış Yap
+          </button>
+        </div>
+      </Navbar>
 
       {/* İçerik */}
-      <div className="max-w-6xl mx-auto p-6 pt-20">
+      <div className="max-w-6xl mx-auto p-6">
         <div className="mb-8">
           <p className="text-gray-400">
             Kullanıcı yönetimi ve parite işlemleri
@@ -418,57 +436,60 @@ const AdminPanel: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-gray-800 divide-y divide-gray-700">
-                  {pairs.map((pair) => (
-                    <tr key={pair.id} className="hover:bg-gray-700">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
-                        {pair.name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                        {pair.reward}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            pair.is_active
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {pair.is_active ? "Aktif" : "Pasif"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                        {new Date(pair.created_at).toLocaleDateString("tr-TR")}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() =>
-                              handleTogglePairStatus(pair.id, pair.is_active)
-                            }
-                            className={`px-3 py-1 rounded text-xs font-semibold ${
+                  {Array.isArray(pairs) &&
+                    pairs.map((pair) => (
+                      <tr key={pair.id} className="hover:bg-gray-700">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
+                          {pair.name}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                          {pair.reward}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span
+                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                               pair.is_active
-                                ? "bg-red-600 hover:bg-red-700 text-white"
-                                : "bg-green-600 hover:bg-green-700 text-white"
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
                             }`}
                           >
-                            {pair.is_active ? "Pasif Yap" : "Aktif Yap"}
-                          </button>
-                          <button
-                            onClick={() => handleDeletePair(pair.id)}
-                            className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs"
-                          >
-                            Sil
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                            {pair.is_active ? "Aktif" : "Pasif"}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                          {new Date(pair.created_at).toLocaleDateString(
+                            "tr-TR"
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() =>
+                                handleTogglePairStatus(pair.id, pair.is_active)
+                              }
+                              className={`px-3 py-1 rounded text-xs font-semibold ${
+                                pair.is_active
+                                  ? "bg-red-600 hover:bg-red-700 text-white"
+                                  : "bg-green-600 hover:bg-green-700 text-white"
+                              }`}
+                            >
+                              {pair.is_active ? "Pasif Yap" : "Aktif Yap"}
+                            </button>
+                            <button
+                              onClick={() => handleDeletePair(pair.id)}
+                              className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs"
+                            >
+                              Sil
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             </div>
 
-            {pairs.length === 0 && (
+            {(!Array.isArray(pairs) || pairs.length === 0) && (
               <div className="px-6 py-8 text-center text-gray-400">
                 Henüz parite bulunmuyor.
               </div>

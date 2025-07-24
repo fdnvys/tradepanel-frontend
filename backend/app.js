@@ -25,7 +25,7 @@ app.use("/api/accounts", accountsRouter);
 app.use("/api/pairs", pairsRouter);
 
 // Vercel için port ayarı
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
 
 // Sadece development'ta server'ı başlat
 if (process.env.NODE_ENV !== "production") {

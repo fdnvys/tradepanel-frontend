@@ -215,7 +215,7 @@ const TradeCard: React.FC<TradeCardProps> = ({
                 </div>
               </div>
             </div>
-            <div className="flex items-center justify-center p-2 rounded-full hover:bg-[#1a1b2e] transition">
+            <div className="hidden md:flex items-center justify-center p-2 rounded-full hover:bg-[#1a1b2e] transition">
               <ChevronIcon open={showDetails} />
             </div>
           </div>

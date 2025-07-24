@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import AdminLogin from "./pages/AdminLogin";
 import AdminPanel from "./pages/AdminPanel";
+import AdminStatistics from "./pages/AdminStatistics";
 import Statistics from "./pages/Statistics";
 
 function App() {
@@ -27,7 +28,18 @@ function App() {
             isAdminLoggedIn ? <AdminPanel /> : <Navigate to="/admin-login" />
           }
         />
+        <Route
+          path="/admin-statistics"
+          element={
+            isAdminLoggedIn ? (
+              <AdminStatistics />
+            ) : (
+              <Navigate to="/admin-login" />
+            )
+          }
+        />
         <Route path="/istatistikler" element={<Statistics />} />
+
         <Route
           path="/"
           element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />}
