@@ -1,7 +1,13 @@
 const sqlite3 = require("sqlite3").verbose();
+const bcrypt = require("bcrypt");
 const db = new sqlite3.Database("./users.db");
 
-db.serialize(() => {
+console.log("Veritabanı sıfırlanıyor...");
+
+db.serialize(async () => {
+  // Tabloları oluştur
+  console.log("Tablolar oluşturuluyor...");
+
   // Users tablosu
   db.run(`CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -24,7 +30,7 @@ db.serialize(() => {
     FOREIGN KEY (user_id) REFERENCES users (id)
   )`);
 
-  // Pairs tablosu (tüm pariteler)
+  // Pairs tablosu
   db.run(`CREATE TABLE IF NOT EXISTS pairs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL,
@@ -33,7 +39,7 @@ db.serialize(() => {
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
 
-  // User_pairs tablosu (kullanıcı bazlı parite durumları)
+  // User_pairs tablosu
   db.run(`CREATE TABLE IF NOT EXISTS user_pairs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
@@ -78,6 +84,63 @@ db.serialize(() => {
     FOREIGN KEY (account_id) REFERENCES accounts (id),
     FOREIGN KEY (pair_id) REFERENCES pairs (id)
   )`);
-});
 
-module.exports = db;
+  // Örnek veriler ekle
+  console.log("Örnek veriler ekleniyor...");
+
+  // Admin kullanıcısı
+  const adminPassword = await bcrypt.hash("admin123", 10);
+  db.run(
+    `INSERT OR IGNORE INTO users (username, password, is_approved, is_pro, refund_rate, rebate_rate) VALUES (?, ?, ?, ?, ?, ?)`,
+    ["admin", adminPassword, 1, 1, 0.5, 0.3]
+  );
+
+  // Test kullanıcıları
+  const testPassword = await bcrypt.hash("test123", 10);
+  db.run(
+    `INSERT OR IGNORE INTO users (username, password, is_approved, is_pro, refund_rate, rebate_rate) VALUES (?, ?, ?, ?, ?, ?)`,
+    ["testuser1", testPassword, 1, 0, 0.4, 0.2]
+  );
+  db.run(
+    `INSERT OR IGNORE INTO users (username, password, is_approved, is_pro, refund_rate, rebate_rate) VALUES (?, ?, ?, ?, ?, ?)`,
+    ["testuser2", testPassword, 1, 1, 0.6, 0.4]
+  );
+
+  // Pariteler
+  const pairs = [
+    "BTC/USDT",
+    "ETH/USDT",
+    "BNB/USDT",
+    "ADA/USDT",
+    "SOL/USDT",
+    "DOT/USDT",
+    "DOGE/USDT",
+    "AVAX/USDT",
+    "MATIC/USDT",
+    "LINK/USDT",
+  ];
+
+  pairs.forEach((pair) => {
+    db.run(`INSERT OR IGNORE INTO pairs (name) VALUES (?)`, [pair]);
+  });
+
+  // Kullanıcılar için hesaplar
+  db.run(
+    `INSERT OR IGNORE INTO accounts (user_id, name, vip) VALUES (2, 'Test Hesap 1', 0)`
+  );
+  db.run(
+    `INSERT OR IGNORE INTO accounts (user_id, name, vip) VALUES (2, 'VIP Hesap 1', 1)`
+  );
+  db.run(
+    `INSERT OR IGNORE INTO accounts (user_id, name, vip) VALUES (3, 'Test Hesap 2', 0)`
+  );
+  db.run(
+    `INSERT OR IGNORE INTO accounts (user_id, name, vip) VALUES (3, 'VIP Hesap 2', 1)`
+  );
+
+  console.log("Veritabanı başarıyla sıfırlandı!");
+  console.log("Admin kullanıcısı: admin / admin123");
+  console.log("Test kullanıcıları: testuser1, testuser2 / test123");
+
+  db.close();
+});

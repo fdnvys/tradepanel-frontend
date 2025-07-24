@@ -8,9 +8,7 @@ import {
   Stats,
 } from "../types";
 
-const API_BASE_URL =
-  process.env.REACT_APP_API_URL ||
-  "https://web-production-2a27.up.railway.app/api";
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
 
 // API istekleri için yardımcı fonksiyon
 const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
@@ -360,7 +358,22 @@ export const getPairs = async (): Promise<any[]> => {
     throw new Error("Pariteler yüklenirken hata oluştu");
   }
 
-  return response.json();
+  const data = await response.json();
+  console.log("getPairs response:", data);
+
+  // Eğer data bir obje ise ve pairs property'si varsa onu döndür
+  if (data && typeof data === "object" && !Array.isArray(data) && data.pairs) {
+    return data.pairs;
+  }
+
+  // Eğer data zaten array ise onu döndür
+  if (Array.isArray(data)) {
+    return data;
+  }
+
+  // Hiçbiri değilse boş array döndür
+  console.error("Unexpected data format:", data);
+  return [];
 };
 
 export const getUserPairs = async (accountId: number): Promise<any> => {
@@ -678,11 +691,142 @@ export const updateUserPairReward = async (
 };
 
 // Yeni: Parite ve kullanıcı bazlı istatistikleri getir
-export const getStatistics = async (): Promise<any> => {
-  return apiRequest("/pairs/statistics");
+export const getStatistics = async (pairId?: number): Promise<any> => {
+  const url = pairId
+    ? `/pairs/statistics?pairId=${pairId}`
+    : "/pairs/statistics";
+  return apiRequest(url);
 };
 
 // Kullanıcının aktif ve biten paritelerini getir
 export const getUserPairList = async (): Promise<any> => {
   return apiRequest("/pairs/user-pair-list");
+};
+
+// Admin istatistikleri için API fonksiyonları
+export const getPairStatistics = async (): Promise<any> => {
+  const adminToken = localStorage.getItem("adminToken");
+  const response = await fetch(`${API_BASE_URL}/pairs/statistics`, {
+    headers: {
+      Authorization: `Bearer ${adminToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Parite istatistikleri yüklenirken hata oluştu");
+  }
+
+  return response.json();
+};
+
+export const getUserStatistics = async (userId: number): Promise<any> => {
+  const adminToken = localStorage.getItem("adminToken");
+  const response = await fetch(`${API_BASE_URL}/users/${userId}/statistics`, {
+    headers: {
+      Authorization: `Bearer ${adminToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Kullanıcı istatistikleri yüklenirken hata oluştu");
+  }
+
+  return response.json();
+};
+
+export const getUserPairStatistics = async (userId: number): Promise<any> => {
+  const adminToken = localStorage.getItem("adminToken");
+  const response = await fetch(
+    `${API_BASE_URL}/users/${userId}/pair-statistics`,
+    {
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Kullanıcı parite istatistikleri yüklenirken hata oluştu");
+  }
+
+  return response.json();
+};
+
+// Yeni API fonksiyonları - tarih filtresi ile
+export const getUserStatisticsWithDate = async (
+  userId: number,
+  startDate?: string,
+  endDate?: string
+): Promise<any> => {
+  const adminToken = localStorage.getItem("adminToken");
+  const params = new URLSearchParams();
+  if (startDate) params.append("startDate", startDate);
+  if (endDate) params.append("endDate", endDate);
+
+  const response = await fetch(
+    `${API_BASE_URL}/users/${userId}/statistics-with-date?${params}`,
+    {
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Kullanıcı istatistikleri yüklenirken hata oluştu");
+  }
+
+  return response.json();
+};
+
+export const getUserPairStatisticsWithDate = async (
+  userId: number,
+  startDate?: string,
+  endDate?: string
+): Promise<any> => {
+  const adminToken = localStorage.getItem("adminToken");
+  const params = new URLSearchParams();
+  if (startDate) params.append("startDate", startDate);
+  if (endDate) params.append("endDate", endDate);
+
+  const response = await fetch(
+    `${API_BASE_URL}/users/${userId}/pair-statistics-with-date?${params}`,
+    {
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Kullanıcı parite istatistikleri yüklenirken hata oluştu");
+  }
+
+  return response.json();
+};
+
+export const getUserAccountStatistics = async (
+  userId: number,
+  startDate?: string,
+  endDate?: string
+): Promise<any> => {
+  const adminToken = localStorage.getItem("adminToken");
+  const params = new URLSearchParams();
+  if (startDate) params.append("startDate", startDate);
+  if (endDate) params.append("endDate", endDate);
+
+  const response = await fetch(
+    `${API_BASE_URL}/users/${userId}/account-statistics?${params}`,
+    {
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Hesap istatistikleri yüklenirken hata oluştu");
+  }
+
+  return response.json();
 };

@@ -41,6 +41,17 @@ const isAdmin = (req, res, next) => {
   next();
 };
 
+// GET /api/pairs - Tüm pariteleri getir
+router.get("/", authenticateToken, (req, res) => {
+  db.all("SELECT * FROM pairs ORDER BY name", (err, pairs) => {
+    if (err) {
+      console.error("Pariteler yüklenirken hata:", err);
+      return res.status(500).json({ error: "Pariteler yüklenemedi" });
+    }
+    res.json({ pairs: pairs || [] });
+  });
+});
+
 // user_pairs için toplam hacim, masraf, iade ve ortalama güncelleme fonksiyonu
 function updateUserPairStats(userId, accountId, pairId, callback) {
   // Tüm trade'leri çek
@@ -1084,21 +1095,45 @@ router.patch("/userpair/selled", authenticateToken, (req, res) => {
 // GET /api/pairs/statistics - Kullanıcıya göre istatistikler (admin: tümü, normal: sadece kendi hesapları)
 router.get("/statistics", authenticateToken, (req, res) => {
   let query = `SELECT up.id, u.username as user_name, a.id as account_id, a.user_id, a.vip, a.created_at as account_created_at, a.name as account_name, 
-                      p.id as pair_id, p.name as pair_name, p.is_active, up.is_completed, up.reward_amount, up.completed_at, up.total_volume, up.total_cost, up.total_refund, up.avg_trade, up.selled_dolar
+                      p.id as pair_id, p.name as pair_name, p.is_active, up.is_completed, up.reward_amount, up.completed_at, up.total_volume, up.total_cost, up.total_refund, up.avg_trade, up.selled_dolar,
+                      MIN(t.started_at) as first_trade_date, MAX(t.ended_at) as last_trade_date
                FROM user_pairs up
                JOIN accounts a ON up.account_id = a.id
                JOIN users u ON a.user_id = u.id
-               JOIN pairs p ON up.pair_id = p.id`;
+               JOIN pairs p ON up.pair_id = p.id
+               LEFT JOIN user_pairs_trades t ON up.user_id = t.user_id AND up.account_id = t.account_id AND up.pair_id = t.pair_id`;
   let params = [];
+  let whereConditions = [];
+
+  // Admin değilse sadece kendi hesaplarını görebilir
   if (!req.user.isAdmin) {
-    query += ` WHERE a.user_id = ?`;
+    whereConditions.push(`a.user_id = ?`);
     params.push(req.user.id);
   }
+
+  // Eğer pairId parametresi varsa filtrele
+  if (req.query.pairId) {
+    whereConditions.push(`p.id = ?`);
+    params.push(parseInt(req.query.pairId));
+  }
+
+  // WHERE koşullarını ekle
+  if (whereConditions.length > 0) {
+    query += ` WHERE ` + whereConditions.join(" AND ");
+  }
+
+  query += ` GROUP BY up.id, u.username, a.id, a.user_id, a.vip, a.created_at, a.name, p.id, p.name, p.is_active, up.is_completed, up.reward_amount, up.completed_at, up.total_volume, up.total_cost, up.total_refund, up.avg_trade, up.selled_dolar`;
   query += ` ORDER BY up.is_completed ASC, p.created_at DESC, a.id ASC`;
+
+  console.log("Statistics query:", query);
+  console.log("Statistics params:", params);
+
   db.all(query, params, (err, rows) => {
     if (err) {
+      console.error("Statistics query error:", err);
       return res.status(500).json({ error: "Database error" });
     }
+    console.log("Statistics result count:", rows ? rows.length : 0);
     res.json({ statistics: rows });
   });
 });

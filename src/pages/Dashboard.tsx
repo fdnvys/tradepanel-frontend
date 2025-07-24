@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import Navbar from "../components/Navbar";
 import {
   accountsApi,
   getAvailablePairs,
@@ -89,12 +90,44 @@ const Dashboard: React.FC = () => {
     // eslint-disable-next-line
   }, []);
 
+  // Sekme başlığını güncelle (sadece Dashboard'da)
+  useEffect(() => {
+    if (selectedAccount && pairDetail && pairDetail.token) {
+      const title = `${selectedAccount.name} - ${pairDetail.token}`;
+      document.title = title;
+    } else if (selectedAccount) {
+      const title = `${selectedAccount.name} - Dashboard`;
+      document.title = title;
+    } else {
+      document.title = "Trade Panel";
+    }
+
+    // Component unmount olduğunda başlığı sıfırla
+    return () => {
+      document.title = "Trade Panel";
+    };
+  }, [selectedAccount, pairDetail]);
+
+  // Mobilde navbar dropdown'ını kapatmak için
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (showNavbarDropdown && !target.closest("[data-navbar-dropdown]")) {
+        setShowNavbarDropdown(false);
+      }
+    };
+
+    document.addEventListener("click", handleClickOutside);
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, [showNavbarDropdown]);
+
   const fetchAccounts = async (afterUpdateId?: number) => {
     if (!token) return;
     setLoading(true);
     try {
       const res = await accountsApi.getAll(token);
-      console.log("Accounts response:", res.accounts); // VIP güncellendi mi kontrolü için
       setAccounts(res.accounts);
       // Seçili hesabı güncelle
       if (selectedAccount) {
@@ -405,51 +438,74 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#18192a] to-[#23243a] text-gray-100">
-      {/* Mobil Hamburger Menü */}
-      <div className="md:hidden flex items-center justify-between px-4 py-3 bg-[#18192a] border-b border-[#23243a] sticky top-0 z-30">
-        <span className="text-2xl font-extrabold text-blue-400 tracking-tight">
-          Dashboard
-        </span>
-        <div className="flex items-center gap-2">
-          {/* Hesap Butonu */}
+      <Navbar onSidebarToggle={() => setSidebarOpen(true)}>
+        {/* Hesap Butonu */}
+        <div className="relative">
           <button
+            data-navbar-dropdown
             onClick={() => setShowNavbarDropdown((v) => !v)}
             className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-semibold shadow transition text-sm"
           >
             Hesaplar
           </button>
-          {/* İstatistikler Butonu */}
-          <Link
-            to="/istatistikler"
-            className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-semibold shadow transition text-sm"
-          >
-            İstatistikler
-          </Link>
-          {/* Hamburger Menü */}
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="focus:outline-none p-1"
-          >
-            <svg
-              className="w-6 h-6 text-blue-400"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            </svg>
-          </button>
+          {showNavbarDropdown && (
+            <div className="absolute left-0 mt-2 w-64 bg-[#23243a] border border-blue-700 rounded-2xl shadow-2xl z-[9999] p-2 animate-fade-in">
+              <div className="mb-2 text-blue-300 font-bold text-base px-2">
+                Hesaplar
+              </div>
+              <button
+                onClick={() => {
+                  setShowVipModal(true);
+                  setShowNavbarDropdown(false);
+                }}
+                className="w-full text-left px-4 py-2 hover:bg-blue-700 text-white rounded-lg transition"
+              >
+                VIP Güncelle
+              </button>
+              <button
+                onClick={() => {
+                  setShowAccountModal(true);
+                  setShowNavbarDropdown(false);
+                }}
+                className="w-full text-left px-4 py-2 hover:bg-blue-700 text-white rounded-lg transition"
+              >
+                Hesap Ekle
+              </button>
+              <button
+                onClick={() => {
+                  setShowDeleteModal(true);
+                  setShowNavbarDropdown(false);
+                }}
+                className="w-full text-left px-4 py-2 hover:bg-red-700 text-white rounded-lg transition"
+              >
+                Hesap Sil
+              </button>
+            </div>
+          )}
         </div>
-      </div>
+        {/* İstatistikler Butonu */}
+        <Link
+          to="/istatistikler"
+          className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-semibold shadow transition text-sm"
+        >
+          İstatistikler
+        </Link>
+
+        {/* Çıkış Yap Butonu */}
+        <button
+          onClick={handleLogout}
+          className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg font-bold shadow transition text-sm"
+        >
+          Çıkış Yap
+        </button>
+      </Navbar>
 
       {/* Mobil Hesap Dropdown */}
       {showNavbarDropdown && (
-        <div className="md:hidden fixed top-16 left-4 right-4 z-50 bg-[#23243a] border border-blue-700 rounded-2xl shadow-2xl p-3">
+        <div
+          data-navbar-dropdown
+          className="md:hidden fixed top-16 left-4 right-4 z-50 bg-[#23243a] border border-blue-700 rounded-2xl shadow-2xl p-3"
+        >
           <div className="mb-2 text-blue-300 font-bold text-sm px-2">
             Hesap İşlemleri
           </div>
@@ -649,84 +705,7 @@ const Dashboard: React.FC = () => {
         }`}
         onClick={() => setSidebarOpen(false)}
       />
-      {/* Navbar */}
-      <nav className="hidden md:flex w-full bg-[#18192a] border-b border-[#23243a] px-8 py-4 items-center justify-between sticky top-0 z-20 shadow-md">
-        <Link
-          to="/"
-          className="text-3xl font-extrabold text-blue-400 tracking-tight hover:underline cursor-pointer"
-        >
-          Dashboard
-        </Link>
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <button
-              onClick={() => setShowNavbarDropdown((v) => !v)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl font-semibold shadow transition flex items-center gap-2"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-              Hesaplar
-            </button>
-            {showNavbarDropdown && (
-              <div className="absolute left-0 mt-2 w-64 bg-[#23243a] border border-blue-700 rounded-2xl shadow-2xl z-[9999] p-2 animate-fade-in">
-                <div className="mb-2 text-blue-300 font-bold text-base px-2">
-                  Hesaplar
-                </div>
-                <button
-                  onClick={() => {
-                    setShowVipModal(true);
-                    setShowNavbarDropdown(false);
-                  }}
-                  className="w-full text-left px-4 py-2 hover:bg-blue-700 text-white rounded-lg transition"
-                >
-                  VIP Güncelle
-                </button>
-                <button
-                  onClick={() => {
-                    setShowAccountModal(true);
-                    setShowNavbarDropdown(false);
-                  }}
-                  className="w-full text-left px-4 py-2 hover:bg-blue-700 text-white rounded-lg transition"
-                >
-                  Hesap Ekle
-                </button>
-                <button
-                  onClick={() => {
-                    setShowDeleteModal(true);
-                    setShowNavbarDropdown(false);
-                  }}
-                  className="w-full text-left px-4 py-2 hover:bg-red-700 text-white rounded-lg transition"
-                >
-                  Hesap Sil
-                </button>
-              </div>
-            )}
-          </div>
-          <Link
-            to="/istatistikler"
-            className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-xl font-semibold shadow transition"
-          >
-            İstatistikler
-          </Link>
-          <button
-            onClick={handleLogout}
-            className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-xl font-bold shadow transition"
-          >
-            Çıkış Yap
-          </button>
-        </div>
-      </nav>
+
       {/* Hesap Ekleme Modalı */}
       {showAccountModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
@@ -1091,7 +1070,6 @@ const Dashboard: React.FC = () => {
                     onClick={() => {
                       setSelectedAccount(acc);
                       setShowAccountDropdown(false);
-                      setSidebarOpen(false);
                     }}
                   >
                     <span className="truncate">{acc.name}</span>
@@ -1117,10 +1095,7 @@ const Dashboard: React.FC = () => {
           {/* Parite Ekle Butonu */}
           <button
             className="w-full mb-4 md:mb-6 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-xl shadow transition text-sm md:text-base"
-            onClick={() => {
-              handleOpenPairModal();
-              setSidebarOpen(false);
-            }}
+            onClick={handleOpenPairModal}
           >
             + Parite Ekle
           </button>
@@ -1152,10 +1127,7 @@ const Dashboard: React.FC = () => {
                           ? "border-blue-300"
                           : "border-transparent"
                       }`}
-                      onClick={() => {
-                        handleSelectPair(idx);
-                        setSidebarOpen(false);
-                      }}
+                      onClick={() => handleSelectPair(idx)}
                     >
                       <span className="truncate">{pair.name}</span>
                     </button>
@@ -1205,10 +1177,7 @@ const Dashboard: React.FC = () => {
                           ? "border-gray-300"
                           : "border-gray-500"
                       }`}
-                      onClick={() => {
-                        handleSelectCompletedPair(idx);
-                        setSidebarOpen(false);
-                      }}
+                      onClick={() => handleSelectCompletedPair(idx)}
                     >
                       <span className="truncate">{pair.name}</span>
                     </button>
