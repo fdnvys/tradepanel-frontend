@@ -12,32 +12,7 @@ const pairsRouter = require("./routes/pairs");
 
 const app = express();
 
-// CORS ayarları - production ve development için
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Development'ta tüm origin'lere izin ver
-    if (process.env.NODE_ENV !== "production") {
-      return callback(null, true);
-    }
-
-    // Production'ta sadece belirli domain'lere izin ver
-    const allowedOrigins = [
-      "https://tradepanel-frontend.vercel.app/", // Vercel URL'inizi buraya yazın
-      "http://localhost:3000", // Local development
-      "http://localhost:3001", // Local development
-    ];
-
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error("CORS policy violation"));
-    }
-  },
-  credentials: true,
-  optionsSuccessStatus: 200,
-};
-
-app.use(cors(corsOptions));
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
