@@ -151,7 +151,7 @@ const AdminStatistics: React.FC = () => {
     try {
       const API_BASE_URL =
         process.env.REACT_APP_API_URL || "http://localhost:3001";
-      const response = await fetch(`${API_BASE_URL}/api/pairs`, {
+      const response = await fetch(`${API_BASE_URL}/pairs`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
         },
@@ -172,7 +172,7 @@ const AdminStatistics: React.FC = () => {
 
       const API_BASE_URL =
         process.env.REACT_APP_API_URL || "http://localhost:3001";
-      const response = await fetch(`${API_BASE_URL}/api/users`, {
+      const response = await fetch(`${API_BASE_URL}/users`, {
         headers: {
           Authorization: `Bearer ${adminToken}`,
         },

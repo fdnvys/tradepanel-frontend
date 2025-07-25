@@ -49,5 +49,7 @@
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.3"
   },
-  "proxy": "http://localhost:5000"
+  "proxy": "http://localhost:5000",
+  "comment": "Frontend çift API sorunu çözüldü - 07/25/2025 04:25:00",
+  "deploy_trigger": "07/25/2025 04:30:00"
 }
