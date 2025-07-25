@@ -7,7 +7,9 @@ import {
   getUserStatisticsWithDate,
   getUserPairStatisticsWithDate,
   getUserAccountStatistics,
+  getPairs,
 } from "../services/api";
+import { adminApi } from "../services/api";
 
 interface PairStat {
   id: number;
@@ -149,15 +151,8 @@ const AdminStatistics: React.FC = () => {
 
   const fetchPairs = async () => {
     try {
-      const response = await fetch("http://localhost:3001/api/pairs", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setPairs(data.pairs || []);
-      }
+      const pairs = await getPairs();
+      setPairs(pairs);
     } catch (error) {
       console.error("Pariteler yüklenirken hata:", error);
     }
@@ -165,26 +160,8 @@ const AdminStatistics: React.FC = () => {
 
   const fetchUsers = async () => {
     try {
-      const adminToken = localStorage.getItem("adminToken");
-      console.log("Admin token:", adminToken);
-
-      const response = await fetch("http://localhost:3001/api/users", {
-        headers: {
-          Authorization: `Bearer ${adminToken}`,
-        },
-      });
-
-      console.log("Response status:", response.status);
-      console.log("Response ok:", response.ok);
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log("Users data:", data);
-        setUsers(data.users || []);
-      } else {
-        const errorData = await response.json();
-        console.error("Response error:", errorData);
-      }
+      const response = await adminApi.getUsers();
+      setUsers(response.users || []);
     } catch (error) {
       console.error("Kullanıcılar yüklenirken hata:", error);
     } finally {
