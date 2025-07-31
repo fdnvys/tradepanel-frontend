@@ -1173,4 +1173,32 @@ router.get("/user-pair-list", authenticateToken, (req, res) => {
   });
 });
 
+// GET /api/pairs/download-database - Database yedekleme (sadece admin)
+router.get("/download-database", authenticateToken, isAdmin, (req, res) => {
+  const fs = require("fs");
+  const path = require("path");
+
+  const dbPath = path.join(__dirname, "../users.db");
+
+  // Dosya var mı kontrol et
+  if (!fs.existsSync(dbPath)) {
+    return res.status(404).json({ error: "Database dosyası bulunamadı" });
+  }
+
+  // Dosya istatistiklerini al
+  const stats = fs.statSync(dbPath);
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+
+  // Dosyayı indir
+  res.setHeader("Content-Type", "application/octet-stream");
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename="users-backup-${timestamp}.db"`
+  );
+  res.setHeader("Content-Length", stats.size);
+
+  const fileStream = fs.createReadStream(dbPath);
+  fileStream.pipe(res);
+});
+
 module.exports = router;

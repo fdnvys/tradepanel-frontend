@@ -5,6 +5,7 @@ import {
   getPairs,
   togglePairStatus,
   deletePair,
+  downloadDatabase,
 } from "../services/api";
 import { useNavigate, Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
@@ -41,6 +42,8 @@ const AdminPanel: React.FC = () => {
   const [refundInput, setRefundInput] = useState<string>("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [pairToDelete, setPairToDelete] = useState<Pair | null>(null);
+  const [showBackupModal, setShowBackupModal] = useState(false);
+  const [backupLoading, setBackupLoading] = useState(false);
 
   const navigate = useNavigate();
 
@@ -192,6 +195,19 @@ const AdminPanel: React.FC = () => {
     navigate("/admin-login");
   };
 
+  const handleDownloadDatabase = async () => {
+    setBackupLoading(true);
+    try {
+      await downloadDatabase();
+      setMessage("Database başarıyla indirildi!");
+      setShowBackupModal(false);
+    } catch (error: any) {
+      setMessage(`Database indirme hatası: ${error.message}`);
+    } finally {
+      setBackupLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
@@ -211,6 +227,12 @@ const AdminPanel: React.FC = () => {
           >
             İstatistikler
           </Link>
+          <button
+            onClick={() => setShowBackupModal(true)}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition"
+          >
+            Database Yedekle
+          </button>
           <button
             onClick={handleLogout}
             className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold"
@@ -578,6 +600,39 @@ const AdminPanel: React.FC = () => {
                 className="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold"
               >
                 Sil
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Database Yedekleme Modalı */}
+      {showBackupModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-semibold text-white mb-4">
+              Database Yedekleme
+            </h3>
+            <p className="text-gray-300 mb-6">
+              Mevcut database'in yedeğini indirmek istediğinizden emin misiniz?
+              <br />
+              <span className="text-yellow-400 text-sm">
+                Bu işlem anlık database'i indirecektir.
+              </span>
+            </p>
+            <div className="flex space-x-4">
+              <button
+                onClick={() => setShowBackupModal(false)}
+                className="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-semibold"
+              >
+                İptal
+              </button>
+              <button
+                onClick={handleDownloadDatabase}
+                disabled={backupLoading}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold disabled:opacity-50"
+              >
+                {backupLoading ? "İndiriliyor..." : "İndir"}
               </button>
             </div>
           </div>

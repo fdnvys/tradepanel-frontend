@@ -830,3 +830,29 @@ export const getUserAccountStatistics = async (
 
   return response.json();
 };
+
+// Database yedekleme API'si
+export const downloadDatabase = async (): Promise<void> => {
+  const adminToken = localStorage.getItem("adminToken");
+  const response = await fetch(`${API_BASE_URL}/pairs/download-database`, {
+    headers: {
+      Authorization: `Bearer ${adminToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Database indirme hatası");
+  }
+
+  // Dosyayı indir
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `users-backup-${new Date().toISOString().slice(0, 19)}.db`;
+  document.body.appendChild(a);
+  a.click();
+  window.URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+};

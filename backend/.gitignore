@@ -61,3 +61,11 @@ typings/
 .next
 
 .vercel
+
+# Database files
+*.sqlite
+*.sqlite3
+db.sqlite
+db.sqlite3
+*.db
+users.db
