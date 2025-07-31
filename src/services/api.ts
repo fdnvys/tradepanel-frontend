@@ -833,6 +833,11 @@ export const getUserAccountStatistics = async (
 
 // Database yedekleme API'si
 export const downloadDatabase = async (): Promise<void> => {
+  console.log("=== FRONTEND DATABASE İNDİRME BAŞLADI ===");
+  console.log("API URL:", API_BASE_URL);
+  console.log("Admin token var mı:", !!localStorage.getItem("adminToken"));
+  console.log("Tarih:", new Date().toISOString());
+
   const adminToken = localStorage.getItem("adminToken");
   const response = await fetch(`${API_BASE_URL}/pairs/download-database`, {
     headers: {
@@ -840,19 +845,37 @@ export const downloadDatabase = async (): Promise<void> => {
     },
   });
 
+  console.log("📡 Response status:", response.status);
+  console.log(
+    "📡 Response headers:",
+    Object.fromEntries(response.headers.entries())
+  );
+
   if (!response.ok) {
     const error = await response.json();
+    console.error("❌ Database indirme hatası:", error);
     throw new Error(error.error || "Database indirme hatası");
   }
 
+  console.log("✅ Response başarılı, blob oluşturuluyor...");
+
   // Dosyayı indir
   const blob = await response.blob();
+  console.log("📦 Blob boyutu:", blob.size, "bytes");
+  console.log("📦 Blob tipi:", blob.type);
+
   const url = window.URL.createObjectURL(blob);
+  const filename = `users-backup-${new Date().toISOString().slice(0, 19)}.db`;
+  console.log("📁 İndirilecek dosya adı:", filename);
+
   const a = document.createElement("a");
   a.href = url;
-  a.download = `users-backup-${new Date().toISOString().slice(0, 19)}.db`;
+  a.download = filename;
   document.body.appendChild(a);
   a.click();
   window.URL.revokeObjectURL(url);
   document.body.removeChild(a);
+
+  console.log("✅ Dosya indirme tamamlandı");
+  console.log("=== FRONTEND DATABASE İNDİRME BİTTİ ===");
 };

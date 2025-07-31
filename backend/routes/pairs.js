@@ -1178,26 +1178,50 @@ router.get("/download-database", authenticateToken, isAdmin, (req, res) => {
   const fs = require("fs");
   const path = require("path");
 
+  console.log("=== DATABASE İNDİRME İŞLEMİ BAŞLADI ===");
+  console.log("Kullanıcı ID:", req.user.id);
+  console.log("Kullanıcı Admin mi:", req.user.isAdmin);
+  console.log("Tarih:", new Date().toISOString());
+
   const dbPath = path.join(__dirname, "../users.db");
+  console.log("Database yolu:", dbPath);
 
   // Dosya var mı kontrol et
   if (!fs.existsSync(dbPath)) {
+    console.error("❌ Database dosyası bulunamadı:", dbPath);
     return res.status(404).json({ error: "Database dosyası bulunamadı" });
   }
 
+  console.log("✅ Database dosyası bulundu");
+
   // Dosya istatistiklerini al
   const stats = fs.statSync(dbPath);
+  console.log("📊 Dosya boyutu:", stats.size, "bytes");
+  console.log("📅 Dosya oluşturulma tarihi:", stats.birthtime);
+  console.log("📅 Dosya değiştirilme tarihi:", stats.mtime);
+
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+  const filename = `users-backup-${timestamp}.db`;
+  console.log("📁 İndirilecek dosya adı:", filename);
 
   // Dosyayı indir
   res.setHeader("Content-Type", "application/octet-stream");
-  res.setHeader(
-    "Content-Disposition",
-    `attachment; filename="users-backup-${timestamp}.db"`
-  );
+  res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
   res.setHeader("Content-Length", stats.size);
 
+  console.log("🚀 Dosya indirme başlatılıyor...");
+
   const fileStream = fs.createReadStream(dbPath);
+
+  fileStream.on("error", (error) => {
+    console.error("❌ Dosya okuma hatası:", error);
+  });
+
+  fileStream.on("end", () => {
+    console.log("✅ Dosya indirme tamamlandı");
+    console.log("=== DATABASE İNDİRME İŞLEMİ BİTTİ ===");
+  });
+
   fileStream.pipe(res);
 });
 

@@ -196,15 +196,23 @@ const AdminPanel: React.FC = () => {
   };
 
   const handleDownloadDatabase = async () => {
+    console.log("=== ADMIN PANEL DATABASE İNDİRME BAŞLADI ===");
+    console.log("Modal açık mu:", showBackupModal);
+    console.log("Loading durumu:", backupLoading);
+
     setBackupLoading(true);
     try {
+      console.log("🚀 downloadDatabase() fonksiyonu çağrılıyor...");
       await downloadDatabase();
+      console.log("✅ downloadDatabase() başarılı");
       setMessage("Database başarıyla indirildi!");
       setShowBackupModal(false);
     } catch (error: any) {
+      console.error("❌ Database indirme hatası:", error);
       setMessage(`Database indirme hatası: ${error.message}`);
     } finally {
       setBackupLoading(false);
+      console.log("=== ADMIN PANEL DATABASE İNDİRME BİTTİ ===");
     }
   };
 
